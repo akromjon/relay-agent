@@ -958,10 +958,10 @@ intr 12345
 ctxt 6789
 ```
 
-`testdata/proc-stat-b.txt` (delta: idle +900, steal +50, total +1000):
+`testdata/proc-stat-b.txt` (delta vs A: user +35, system +10, idle +900, softirq +5, steal +50 = total +1000; iowait unchanged so idle+iowait = +900):
 ```
-cpu  1030 0 510 8900 105 0 55 250 0 0
-cpu0 1030 0 510 8900 105 0 55 250 0 0
+cpu  1035 0 510 8900 100 0 55 250 0 0
+cpu0 1035 0 510 8900 100 0 55 250 0 0
 intr 12999
 ctxt 7000
 ```

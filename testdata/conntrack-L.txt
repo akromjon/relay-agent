@@ -1,0 +1,7 @@
+udp      17 29 src=198.51.100.11 dst=192.0.2.1 sport=50231 dport=2053 src=203.0.113.10 dst=192.0.2.1 sport=443 dport=50231 [ASSURED] mark=0 use=1
+udp      17 27 src=198.51.100.11 dst=192.0.2.1 sport=50232 dport=2053 src=203.0.113.10 dst=192.0.2.1 sport=443 dport=50232 [ASSURED] mark=0 use=1
+udp      17 28 src=198.51.100.12 dst=192.0.2.1 sport=41000 dport=2053 src=203.0.113.10 dst=192.0.2.1 sport=443 dport=41000 [ASSURED] mark=0 use=1
+udp      17 12 src=198.51.100.13 dst=192.0.2.1 sport=41001 dport=2053 [UNREPLIED] src=203.0.113.10 dst=192.0.2.1 sport=443 dport=41001 mark=0 use=1
+udp      17 29 src=198.51.100.14 dst=192.0.2.1 sport=60000 dport=2057 src=203.0.113.20 dst=192.0.2.1 sport=2407 dport=60000 [ASSURED] mark=0 use=1
+tcp      6 98 TIME_WAIT src=198.51.100.99 dst=192.0.2.1 sport=27791 dport=22 src=192.0.2.1 dst=198.51.100.99 sport=22 dport=27791 [ASSURED] mark=0 use=1
+udp      17 21 src=192.0.2.136 dst=192.0.2.255 sport=64512 dport=64512 [UNREPLIED] src=192.0.2.255 dst=192.0.2.136 sport=64512 dport=64512 mark=0 use=1
