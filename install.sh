@@ -91,6 +91,7 @@ else
 	curl -fsSL -m 60 --retry 2 "${BASE}/relay-agent-linux-${ARCH}.sha256" -o "${TMP}/sum"
 	(cd "${TMP}" && sed "s#relay-agent-linux-${ARCH}#relay-agent#" sum | sha256sum -c --quiet -) || die "sha256 mismatch"
 fi
+[[ -s "${TMP}/relay-agent" ]] && (( $(stat -c %s "${TMP}/relay-agent") > 1000000 )) || die "binary is missing or truncated ($(stat -c %s "${TMP}/relay-agent" 2>/dev/null || echo 0) bytes)"
 install -m 0755 "${TMP}/relay-agent" "${BIN}"
 
 # --- 4. env -------------------------------------------------------------------
