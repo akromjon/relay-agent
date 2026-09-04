@@ -1,7 +1,7 @@
 # relay-agent — read-only stats agent for CHOP relay boxes
 
 **Date:** 2026-09-04
-**Status:** design, approved in discussion, pending written review
+**Status:** approved 2026-09-04
 **Owner:** akyprog
 **Repo:** github.com/akromjon/relay-agent
 
@@ -156,6 +156,48 @@ The same `rules[]` array as `/api/stats` without counters, plus the
 Static binary, stdlib only, ~4 MB. Idle RSS under 8 MB. systemd unit sets
 `MemoryMax=32M` and `CPUQuota=10%` as hard ceilings, so a bug cannot take
 CPU from the forwarding path. No goroutines at rest besides the listener.
+
+## Portability (runs on any relay box we are likely to buy)
+
+The fleet today is Ubuntu 24.04 on Regxa/Timeweb/Newfold, but relays have
+shipped on Ubuntu 22.04, 24.04 and 26.04 (kernel 6.8 and 7.0), and a Debian
+box is plausible. The agent must work on all of them without per-box tweaks.
+
+- **Binary:** `CGO_ENABLED=0`, stdlib only, built for `linux/amd64` and
+  `linux/arm64`. No glibc dependency, so it runs on any distro with a
+  3.x+ kernel. `install.sh` picks the arch from `uname -m`.
+- **nft:** `nft -j` (JSON output) exists since nftables 0.9.0 (Ubuntu
+  20.04 ships 0.9.3, 22.04 1.0.2, 24.04 1.0.9). If `nft` is missing or
+  the table is absent, `rules` is `[]` and health reports
+  `nft_table_present: false` — never a crash. The install script installs
+  `nftables` where absent (Newfold/Bluehost images lack it).
+- **conntrack:** reader order is (1) `/proc/net/nf_conntrack` when the
+  kernel exposes it (older/custom kernels, `CONFIG_NF_CONNTRACK_PROCFS`),
+  else (2) `conntrack -L` from conntrack-tools. Both produce the same line
+  format, so one parser serves both. If neither is available, `origins` is
+  `[]` with a warning, and the install script installs `conntrack`.
+- **Interface:** `RELAY_IFACE` auto-detects from the default route
+  (`/proc/net/route`, flag `0x0003`, first entry with destination
+  `00000000`). Handles `eth0`, `ens3`, `ens16`, `enp*` — every name seen in
+  the fleet — without configuration.
+- **/proc formats:** `/proc/net/dev`, `/proc/stat`, `/proc/loadavg`,
+  `/proc/meminfo` are stable since 2.6; parsers tolerate extra columns.
+  Conntrack sysctls are read only if present (module not loaded → nulls,
+  not errors).
+- **systemd:** every hardening key used is available since systemd 232
+  (Ubuntu 18.04+ / Debian 9+). `install.sh` checks `systemctl --version`
+  and drops `CPUQuota`/`MemoryMax` lines on anything older rather than
+  failing.
+- **Package manager:** `install.sh` supports `apt` (Ubuntu/Debian). On
+  other distros it stops with a message listing the two packages to
+  install by hand (`nftables`, `conntrack`) and continues only if both
+  binaries are then found on `PATH`.
+- **Co-hosted relays:** a box that is both a node and a relay (relay 13 =
+  node 413 runs iptables-nft beside `chop_relay`) is fine — the agent reads
+  only `table ip chop_relay`, never the whole ruleset, and its port is
+  configurable to avoid the node API on 8080.
+- **Kernel 7.0 boxes:** no kernel module is touched; the agent is pure
+  userspace and adds no risk to the known 7.0 softirq issue.
 
 ## systemd unit
 
