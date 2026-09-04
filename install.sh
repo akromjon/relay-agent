@@ -63,9 +63,11 @@ table ip chop_relay {
 }
 NFT
 	log "wrote empty chop_relay table to ${NFT_CONF}"
+	nft -f "${NFT_CONF}"
 fi
-nft -f "${NFT_CONF}"
-systemctl enable --now nftables >/dev/null 2>&1 || true
+# Never reload an existing table: that resets counters and blinks live DNAT rules.
+systemctl enable nftables >/dev/null 2>&1 || true
+nft list table ip chop_relay >/dev/null 2>&1 || nft -f "${NFT_CONF}"
 
 # --- 3. binary ----------------------------------------------------------------
 case "$(uname -m)" in
