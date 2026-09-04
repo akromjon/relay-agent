@@ -46,6 +46,10 @@ sysctl -q --system >/dev/null
 
 if [[ -f "${NFT_CONF}" ]] && grep -q 'chop_relay' "${NFT_CONF}"; then
 	log "nftables.conf already has chop_relay - leaving it untouched"
+elif nft list table ip chop_relay >/dev/null 2>&1; then
+	# Live table exists but is not in the file. Writing the file and loading it
+	# would run `delete table` against the live rules. Leave both alone.
+	log "WARNING: live chop_relay table is not persisted in ${NFT_CONF}; persist it by hand (nft list ruleset > file), skipping nft prep"
 else
 	[[ -f "${NFT_CONF}" && ! -f "${NFT_CONF}.stock" ]] && cp "${NFT_CONF}" "${NFT_CONF}.stock"
 	cat > "${NFT_CONF}" <<'NFT'
