@@ -1,0 +1,28 @@
+[Unit]
+Description=CHOP relay agent (read-only stats)
+Documentation=https://github.com/akromjon/relay-agent
+After=network-online.target nftables.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=/etc/relay-agent/.env
+ExecStart=/usr/local/bin/relay-agent
+Restart=on-failure
+RestartSec=3
+MemoryMax=32M
+CPUQuota=10%
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_NETLINK
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+
+[Install]
+WantedBy=multi-user.target

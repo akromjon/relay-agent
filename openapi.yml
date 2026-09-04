@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  title: CHOP relay-agent
+  version: 0.1.0
+  description: Read-only kernel counters from a relay box. All routes need header `key`.
+servers:
+  - url: http://{relay}:8080
+paths:
+  /api/health:
+    get:
+      summary: Liveness and box prerequisites
+      responses:
+        "200": {description: OK, content: {application/json: {schema: {$ref: "#/components/schemas/Health"}}}}
+        "404": {description: Missing or wrong key}
+  /api/stats:
+    get:
+      summary: DNAT counters, per-origin conntrack state, box counters
+      responses:
+        "200": {description: OK, content: {application/json: {schema: {$ref: "#/components/schemas/Stats"}}}}
+        "404": {description: Missing or wrong key}
+        "500": {description: A /proc read failed}
+  /api/rules:
+    get:
+      summary: Current DNAT and masquerade map
+      responses:
+        "200": {description: OK, content: {application/json: {schema: {$ref: "#/components/schemas/NFTRules"}}}}
+        "404": {description: Missing or wrong key}
+components:
+  schemas:
+    Health:
+      type: object
+      properties:
+        running: {type: boolean}
+        version: {type: string}
+        uptime_s: {type: integer}
+        iface: {type: string}
+        ip_forward: {type: boolean, nullable: true}
+        conntrack_max: {type: integer, nullable: true}
+        nft_table_present: {type: boolean}
+    Rule:
+      type: object
+      properties:
+        proto: {type: string}
+        port: {type: integer}
+        origin: {type: string}
+        origin_port: {type: integer}
+        new_flows: {type: integer, nullable: true, description: nat-hook counter = first packet per flow, cumulative}
+        bytes: {type: integer, nullable: true}
+    Masq:
+      type: object
+      properties:
+        proto: {type: string}
+        origin: {type: string}
+        origin_port: {type: integer}
+        packets: {type: integer, nullable: true}
+        bytes: {type: integer, nullable: true}
+    OriginStats:
+      type: object
+      properties:
+        origin: {type: string}
+        origin_port: {type: integer}
+        proto: {type: string}
+        flows: {type: integer}
+        replied: {type: integer}
+        client_ips: {type: integer}
+    BoxStats:
+      type: object
+      properties:
+        rx_bytes: {type: integer}
+        tx_bytes: {type: integer}
+        rx_packets: {type: integer}
+        tx_packets: {type: integer}
+        rx_drop: {type: integer}
+        tx_drop: {type: integer}
+        conntrack_count: {type: integer, nullable: true}
+        conntrack_max: {type: integer, nullable: true}
+        load1: {type: number}
+        mem_avail_kb: {type: integer}
+        cpu_steal_pct: {type: number}
+        cpu_idle_pct: {type: number}
+    Stats:
+      type: object
+      properties:
+        ts: {type: integer}
+        iface: {type: string}
+        rules: {type: array, items: {$ref: "#/components/schemas/Rule"}}
+        origins: {type: array, items: {$ref: "#/components/schemas/OriginStats"}}
+        box: {$ref: "#/components/schemas/BoxStats"}
+        warnings: {type: array, items: {type: string}}
+    NFTRules:
+      type: object
+      properties:
+        rules: {type: array, items: {$ref: "#/components/schemas/Rule"}}
+        masquerade: {type: array, items: {$ref: "#/components/schemas/Masq"}}
