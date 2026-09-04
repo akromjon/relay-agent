@@ -2239,7 +2239,7 @@ Relay 30 (`<relay-30-ip>`) is a validated idle spare with zero user traffic. It 
 ```bash
 ./build.sh v0.1.0-dev
 scp dist/relay-agent-linux-amd64 root@<relay-30-ip>:/root/relay-agent.bin
-TOKEN="$(openssl rand -hex 24)"; echo "$TOKEN" > /private/tmp/claude-501/-Users-admin-mobile-app-ultimate-vpn-app/4ea2acce-e449-4d9f-b70b-0c988c1e51a1/scratchpad/relay30.token
+TOKEN="$(openssl rand -hex 24)"; echo "$TOKEN" > $SCRATCH/relay30.token
 ssh root@<relay-30-ip> "API_TOKEN=$TOKEN RELAY_AGENT_BINARY=/root/relay-agent.bin bash -s" < install.sh
 ssh root@<relay-30-ip> "grep -c dnat /etc/nftables.conf; systemctl is-active relay-agent; curl -s -H 'key: $TOKEN' http://127.0.0.1:8080/api/stats | head -c 600; echo; ps -o rss=,pcpu= -C relay-agent"
 ```
@@ -2277,7 +2277,7 @@ gh release create v0.1.0 dist/relay-agent-linux-amd64 dist/relay-agent-linux-amd
 - [ ] **Step 3: Install via the release path on spares 33, 34, 35 (idle, zero user traffic)**
 
 ```bash
-S=/private/tmp/claude-501/-Users-admin-mobile-app-ultimate-vpn-app/4ea2acce-e449-4d9f-b70b-0c988c1e51a1/scratchpad
+S=$SCRATCH
 for R in <relay-33-ip> <relay-34-ip> <relay-35-ip>; do
   T="$(openssl rand -hex 24)"; echo "$R $T" >> $S/relay-tokens.txt
   ssh root@$R "API_TOKEN=$T bash -s" < install.sh
