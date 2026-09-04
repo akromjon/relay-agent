@@ -83,12 +83,12 @@ TMP="$(mktemp -d)"; trap 'rm -rf "${TMP}"' EXIT
 if [[ -n "${RELAY_AGENT_BINARY:-}" ]]; then
 	cp "${RELAY_AGENT_BINARY}" "${TMP}/relay-agent"
 else
-	TAG="${RELAY_AGENT_VERSION:-$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)}"
+	TAG="${RELAY_AGENT_VERSION:-$(curl -fsSL -m 30 "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)}"
 	[[ -n "${TAG}" ]] || die "could not resolve latest release tag; set RELAY_AGENT_VERSION"
 	BASE="https://github.com/${REPO}/releases/download/${TAG}"
 	log "downloading ${TAG} (${ARCH})"
-	curl -fsSL "${BASE}/relay-agent-linux-${ARCH}" -o "${TMP}/relay-agent"
-	curl -fsSL "${BASE}/relay-agent-linux-${ARCH}.sha256" -o "${TMP}/sum"
+	curl -fsSL -m 180 --retry 2 "${BASE}/relay-agent-linux-${ARCH}" -o "${TMP}/relay-agent" || die "download failed or timed out; pass RELAY_AGENT_BINARY=/path/to/binary to skip the download"
+	curl -fsSL -m 60 --retry 2 "${BASE}/relay-agent-linux-${ARCH}.sha256" -o "${TMP}/sum"
 	(cd "${TMP}" && sed "s#relay-agent-linux-${ARCH}#relay-agent#" sum | sha256sum -c --quiet -) || die "sha256 mismatch"
 fi
 install -m 0755 "${TMP}/relay-agent" "${BIN}"
